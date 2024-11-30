@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict, Any
 from .services.code_analyzer import CodeAnalyzer
 from .config import OPENAI_API_KEY
 
@@ -21,7 +21,9 @@ class AnalysisRequest(BaseModel):
     question: str
 
 class AnalysisResponse(BaseModel):
-    answer: str
+    repository_analysis: Dict[str, Any]
+    analysis_summary: Dict[str, Any]
+    ai_insights: Dict[str, Any]
 
 analyzers = {}
 
@@ -32,16 +34,23 @@ async def root():
 @app.post("/analyze", response_model=AnalysisResponse)
 async def analyze_code(request: AnalysisRequest):
     try:
+        # Create a unique key for the analyzer
+        analyzer_key = request.repo_url
+        
         # Create or get analyzer for the repository
-        if request.repo_url not in analyzers:
-            analyzer = CodeAnalyzer(request.repo_url, OPENAI_API_KEY)
+        if analyzer_key not in analyzers:
+            analyzer = CodeAnalyzer(
+                request.repo_url,
+                OPENAI_API_KEY,
+                model="gpt-4"
+            )
             await analyzer.initialize()
-            analyzers[request.repo_url] = analyzer
+            analyzers[analyzer_key] = analyzer
         
         # Get analysis
-        answer = await analyzers[request.repo_url].analyze_code(request.question)
+        answer = await analyzers[analyzer_key].analyze_code(request.question)
         
-        return AnalysisResponse(answer=answer)
+        return answer
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

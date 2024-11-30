@@ -7,3 +7,5 @@ langchain
 GitPython
 langchain_community
 python-dotenv
+radon
+langchain-text-splitters
