@@ -1,3 +1,4 @@
 .env
 data/
 temp_repo/
+__pycache__/
