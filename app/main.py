@@ -15,6 +15,10 @@ class AnalysisResponse(BaseModel):
 
 analyzers = {}
 
+@app.get("/")
+async def root():
+    return {"message": "Hello World"}
+
 @app.post("/analyze", response_model=AnalysisResponse)
 async def analyze_code(request: AnalysisRequest):
     try:
